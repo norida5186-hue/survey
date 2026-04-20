@@ -2,377 +2,736 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>アンケート｜翔洋高校</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif;background:#f0ede8;min-height:100vh;padding:1rem 0.75rem 2rem;color:#222}
-.wrap{max-width:480px;margin:0 auto}
+  /* ===== 設定：ここにGASのURLを入れる ===== */
+  /* GAS_URL は JS内の const GAS_URL に設定してください */
 
-/* header */
-.header{text-align:center;padding:1.5rem 0 1.25rem}
-.header .org{font-size:12px;color:#888;letter-spacing:0.1em;margin-bottom:6px}
-.header h1{font-size:22px;font-weight:700;color:#1a3a5c}
-.header p{font-size:13px;color:#555;line-height:1.7;margin-top:10px;text-align:left;background:white;border-radius:12px;padding:1rem;border-left:4px solid #2d7cc1}
+  :root {
+    --primary: #1a5276;
+    --accent: #2e86c1;
+    --light: #d6eaf8;
+    --bg: #f4f8fb;
+    --text: #1c2833;
+    --muted: #7f8c8d;
+    --success: #1e8449;
+    --card: #ffffff;
+    --radius: 12px;
+  }
 
-/* progress */
-.progress-wrap{margin:1rem 0 0.5rem}
-.progress-label{font-size:12px;color:#888;margin-bottom:6px;display:flex;justify-content:space-between}
-.progress-bar{height:4px;background:#ddd;border-radius:2px;overflow:hidden}
-.progress-fill{height:100%;background:#2d7cc1;border-radius:2px;transition:width 0.35s ease}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* question card */
-.q-card{background:white;border-radius:16px;padding:1.25rem;margin-bottom:1rem;display:none}
-.q-card.active{display:block}
-.q-num{font-size:11px;color:#2d7cc1;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
-.q-text{font-size:15px;font-weight:600;color:#1a3a5c;line-height:1.55;margin-bottom:1rem}
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
 
-/* radio choices */
-.choices{display:flex;flex-direction:column;gap:8px}
-.choice-label{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid #e0dbd4;border-radius:10px;cursor:pointer;transition:all 0.15s;font-size:14px;color:#333}
-.choice-label:hover{border-color:#2d7cc1;background:#f0f7ff}
-.choice-label input{display:none}
-.choice-label.selected{border-color:#2d7cc1;background:#e8f2fc;color:#1a3a5c;font-weight:600}
-.radio-dot{width:18px;height:18px;border-radius:50%;border:2px solid #ccc;flex-shrink:0;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
-.choice-label.selected .radio-dot{border-color:#2d7cc1;background:#2d7cc1}
-.radio-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:white;display:none}
-.choice-label.selected .radio-dot::after{display:block}
+  /* ---- ヘッダー ---- */
+  header {
+    background: var(--primary);
+    color: white;
+    padding: 16px 20px;
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+  }
+  header span { opacity: 0.8; }
 
-/* textarea */
-textarea{width:100%;border:1.5px solid #e0dbd4;border-radius:10px;padding:12px;font-size:14px;font-family:inherit;resize:vertical;min-height:100px;color:#333;background:#fafaf8;transition:border-color 0.15s}
-textarea:focus{outline:none;border-color:#2d7cc1;background:white}
-.optional{font-size:11px;color:#aaa;margin-bottom:8px}
+  /* ---- メインカード ---- */
+  .container {
+    max-width: 600px;
+    margin: 24px auto;
+    padding: 0 16px 60px;
+  }
 
-/* nav buttons */
-.nav{display:flex;gap:10px;margin-top:1.25rem}
-.btn-back{flex:1;background:none;border:1.5px solid #ccc;border-radius:10px;padding:13px;font-size:14px;font-family:inherit;color:#666;cursor:pointer;transition:all 0.15s}
-.btn-back:hover{border-color:#999;color:#333}
-.btn-next{flex:2;background:#2d7cc1;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;font-family:inherit;color:white;cursor:pointer;transition:opacity 0.15s}
-.btn-next:hover{opacity:0.88}
-.btn-next:disabled{opacity:0.45;cursor:not-allowed}
-.btn-submit{flex:2;background:#1a5c8f;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;font-family:inherit;color:white;cursor:pointer;transition:opacity 0.15s}
-.btn-submit:hover{opacity:0.88}
-.btn-submit:disabled{opacity:0.45;cursor:not-allowed}
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
 
-/* thank you */
-#screen-thanks{display:none}
-.thanks-card{background:white;border-radius:16px;padding:2rem 1.5rem;text-align:center;margin-top:1rem}
-.thanks-icon{width:60px;height:60px;border-radius:50%;background:#e8f2fc;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:28px;color:#2d7cc1}
-.thanks-card h2{font-size:20px;font-weight:700;color:#1a3a5c;margin-bottom:10px}
-.thanks-card p{font-size:14px;color:#666;line-height:1.7}
-.btn-restart{margin-top:20px;padding:10px 24px;border-radius:10px;border:1.5px solid #ccc;background:none;font-size:14px;font-family:inherit;color:#666;cursor:pointer}
+  h1 {
+    font-size: 22px;
+    color: var(--primary);
+    margin-bottom: 12px;
+  }
 
-/* 管理画面・QR */
-#adminPanel,#qrPanel{display:none;background:white;border-radius:16px;padding:20px;margin-top:20px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
-.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px}
-.stat-box{background:#f8f9fa;padding:12px;border-radius:10px;text-align:center;border:1px solid #eee}
-.stat-val{font-size:22px;font-weight:bold;color:#1a3a5c}
-.stat-lbl{font-size:10px;color:#888}
-.table-wrap{overflow-x:auto;margin-top:20px}
-table{width:100%;border-collapse:collapse;font-size:11px}
-th,td{border:1px solid #eee;padding:8px;text-align:center}
-th{background:#f4f7fb}
-.qr-box{text-align:center;padding:20px;background:#fff}
-#qr-canvas canvas{max-width:100%;height:auto}
+  .intro {
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e8f0f8;
+  }
+
+  /* ---- プログレス ---- */
+  .progress-wrap {
+    margin-bottom: 24px;
+  }
+  .progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-bar {
+    height: 6px;
+    background: #e0eaf4;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  /* ---- 質問 ---- */
+  .question { display: none; }
+  .question.active { display: block; }
+
+  .q-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .q-text {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .q-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* ---- 選択肢 ---- */
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+
+  .choice-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px solid #e0eaf4;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+  .choice-label:hover { border-color: var(--accent); background: var(--light); }
+  .choice-label input { display: none; }
+  .choice-label.selected {
+    border-color: var(--accent);
+    background: var(--light);
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .choice-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #e0eaf4;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .choice-label.selected .choice-num {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* ---- テキストエリア ---- */
+  textarea {
+    width: 100%;
+    border: 2px solid #e0eaf4;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent); }
+
+  /* ---- ボタン ---- */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 28px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-back {
+    background: #e0eaf4;
+    color: var(--primary);
+  }
+  .btn-next {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-submit {
+    background: var(--primary);
+    color: white;
+  }
+  .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ---- 完了画面 ---- */
+  #done-screen {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .done-icon {
+    width: 70px; height: 70px;
+    background: var(--success);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 32px;
+  }
+  #done-screen h2 { color: var(--primary); margin-bottom: 12px; }
+  #done-screen p { font-size: 14px; color: var(--muted); line-height: 1.8; }
+
+  .btn-new {
+    margin-top: 24px;
+    display: inline-block;
+    padding: 12px 28px;
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+  }
+
+  /* ---- 管理者リンク ---- */
+  .admin-bar {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+  }
+  .admin-bar a {
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .admin-bar a:hover { background: #e0eaf4; }
+
+  /* ---- 管理画面 ---- */
+  #admin-modal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .modal-card {
+    background: white;
+    border-radius: var(--radius);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px;
+    position: relative;
+  }
+  .modal-card h2 { color: var(--primary); margin-bottom: 20px; font-size: 18px; }
+
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: none; font-size: 22px;
+    cursor: pointer; color: var(--muted);
+  }
+
+  .admin-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .btn-sm {
+    padding: 8px 16px;
+    border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: opacity 0.2s;
+  }
+  .btn-sm:hover { opacity: 0.8; }
+  .btn-load { background: var(--accent); color: white; }
+  .btn-csv  { background: var(--success); color: white; }
+  .btn-qr   { background: var(--primary); color: white; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--primary); color: white;
+    padding: 10px 12px; text-align: left; white-space: nowrap;
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid #e0eaf4; vertical-align: top; }
+  tr:nth-child(even) td { background: #f7fafd; }
+
+  .status-msg {
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 12px; min-height: 20px;
+  }
+
+  /* ---- QRモーダル ---- */
+  #qr-modal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  #qr-modal.show { display: flex; }
+  .qr-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 32px;
+    text-align: center;
+    max-width: 320px;
+    width: 100%;
+  }
+  .qr-card h3 { color: var(--primary); margin-bottom: 6px; }
+  .qr-card p { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  #qr-code { margin: 0 auto 20px; display: inline-block; }
+  .qr-url { font-size: 11px; color: var(--muted); word-break: break-all; margin-top: 12px; }
+  .btn-qr-close {
+    margin-top: 16px;
+    padding: 10px 24px;
+    background: var(--primary); color: white;
+    border: none; border-radius: 8px;
+    font-size: 14px; cursor: pointer; font-family: inherit;
+  }
+
+  /* ---- パスワード入力 ---- */
+  .pw-wrap { display: flex; gap: 8px; margin-bottom: 16px; }
+  .pw-wrap input {
+    flex: 1; padding: 10px 14px;
+    border: 2px solid #e0eaf4; border-radius: 8px;
+    font-size: 14px; outline: none;
+  }
+  .pw-wrap input:focus { border-color: var(--accent); }
+
+  .error-msg { color: #c0392b; font-size: 13px; margin-top: 6px; }
+
+  @media (max-width: 480px) {
+    .card { padding: 20px 16px; }
+    .btn-row { flex-direction: column; }
+    .btn-back { order: 2; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap" id="main-wrap">
 
-<!-- Header -->
-<div class="header" id="screen-form">
-  <div class="org">会津地域若者サポートステーション</div>
-  <h1>アンケート</h1>
-  <p>本日はお疲れさまでした。参加される皆さんの現在の状態をファシリテーターが確認するとともに、皆さん自身にも自分の現状をご確認いただくものです。記入内容によって個人を評価するものではありませんので、ありのままに率直にお答えください。</p>
-</div>
+<header>
+  <span>会津地域若者サポートステーション</span>
+</header>
 
-<!-- Progress -->
-<div class="progress-wrap" id="progress-wrap">
-  <div class="progress-label">
-    <span id="prog-text">質問 1 / 6</span>
-    <span id="prog-pct">17%</span>
-  </div>
-  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:17%"></div></div>
-</div>
+<!-- ===== アンケート画面 ===== -->
+<div class="container">
+  <div class="card" id="survey-card">
+    <h1>📝 アンケート</h1>
+    <p class="intro">
+      本日はお疲れさまでした。参加される皆さんの現在の状態をファシリテーターが確認するとともに、皆さん自身にも自分の現状をご確認いただくものです。記入内容によって個人を評価するものではありませんので、ありのままに率直にお答えください。
+    </p>
 
-<!-- Q1 -->
-<div class="q-card active" id="q1-card">
-  <div class="q-num">質問 01</div>
-  <div class="q-text">①受講いただいた感想を率直にお聞かせください。<br>全体を通して、満足できる内容だった。</div>
-  <div class="choices" id="q1-choices">
-    <label class="choice-label" onclick="select(this,'q1')"><input type="radio" name="q1"><div class="radio-dot"></div>１．大変参考になった</label>
-    <label class="choice-label" onclick="select(this,'q1')"><input type="radio" name="q1"><div class="radio-dot"></div>２．参考になった</label>
-    <label class="choice-label" onclick="select(this,'q1')"><input type="radio" name="q1"><div class="radio-dot"></div>３．あまり参考にならなかった</label>
-    <label class="choice-label" onclick="select(this,'q1')"><input type="radio" name="q1"><div class="radio-dot"></div>４．参考にならなかった</label>
-    <label class="choice-label" onclick="select(this,'q1')"><input type="radio" name="q1"><div class="radio-dot"></div>５．全体を通して、満足できる内容だった。</label>
-  </div>
-  <div class="nav">
-    <button class="btn-next" id="q1-next" onclick="goTo(2)" disabled>次へ →</button>
-  </div>
-</div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="q-label">質問 1 / 6</span>
+        <span id="q-pct">17%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:17%"></div>
+      </div>
+    </div>
 
-<!-- Q2 -->
-<div class="q-card" id="q2-card">
-  <div class="q-num">質問 02</div>
-  <div class="q-text">②自己PR作成のコツを知ることができた。</div>
-  <div class="choices" id="q2-choices">
-    <label class="choice-label" onclick="select(this,'q2')"><input type="radio" name="q2"><div class="radio-dot"></div>１．大変参考になった</label>
-    <label class="choice-label" onclick="select(this,'q2')"><input type="radio" name="q2"><div class="radio-dot"></div>２．参考になった</label>
-    <label class="choice-label" onclick="select(this,'q2')"><input type="radio" name="q2"><div class="radio-dot"></div>３．あまり参考にならなかった</label>
-    <label class="choice-label" onclick="select(this,'q2')"><input type="radio" name="q2"><div class="radio-dot"></div>４．参考にならなかった</label>
-  </div>
-  <div class="nav">
-    <button class="btn-back" onclick="goTo(1)">← 戻る</button>
-    <button class="btn-next" id="q2-next" onclick="goTo(3)" disabled>次へ →</button>
-  </div>
-</div>
+    <!-- Q1 -->
+    <div class="question active" id="q1">
+      <div class="q-num">質問 01</div>
+      <div class="q-text">①受講いただいた感想を率直にお聞かせください。<br>全体を通して、満足できる内容だった。</div>
+      <div class="choices">
+        <label class="choice-label"><input type="radio" name="q1" value="1"><span class="choice-num">1</span>大変参考になった</label>
+        <label class="choice-label"><input type="radio" name="q1" value="2"><span class="choice-num">2</span>参考になった</label>
+        <label class="choice-label"><input type="radio" name="q1" value="3"><span class="choice-num">3</span>あまり参考にならなかった</label>
+        <label class="choice-label"><input type="radio" name="q1" value="4"><span class="choice-num">4</span>参考にならなかった</label>
+        <label class="choice-label"><input type="radio" name="q1" value="5"><span class="choice-num">5</span>全体を通して、満足できる内容だった。</label>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-next" onclick="nextQ(1)">次へ →</button>
+      </div>
+    </div>
 
-<!-- Q3 -->
-<div class="q-card" id="q3-card">
-  <div class="q-num">質問 03</div>
-  <div class="q-text">③講座の時間はいかがでしたか。</div>
-  <div class="choices" id="q3-choices">
-    <label class="choice-label" onclick="select(this,'q3')"><input type="radio" name="q3"><div class="radio-dot"></div>１．ちょうど良い</label>
-    <label class="choice-label" onclick="select(this,'q3')"><input type="radio" name="q3"><div class="radio-dot"></div>２．長い</label>
-    <label class="choice-label" onclick="select(this,'q3')"><input type="radio" name="q3"><div class="radio-dot"></div>３．短い</label>
-    <label class="choice-label" onclick="select(this,'q3')"><input type="radio" name="q3"><div class="radio-dot"></div>４．もう少し長くてもよい</label>
-  </div>
-  <div class="nav">
-    <button class="btn-back" onclick="goTo(2)">← 戻る</button>
-    <button class="btn-next" id="q3-next" onclick="goTo(4)" disabled>次へ →</button>
-  </div>
-</div>
+    <!-- Q2 -->
+    <div class="question" id="q2">
+      <div class="q-num">質問 02</div>
+      <div class="q-text">②自己PR作成のコツを知ることができた。</div>
+      <div class="choices">
+        <label class="choice-label"><input type="radio" name="q2" value="1"><span class="choice-num">1</span>大変参考になった</label>
+        <label class="choice-label"><input type="radio" name="q2" value="2"><span class="choice-num">2</span>参考になった</label>
+        <label class="choice-label"><input type="radio" name="q2" value="3"><span class="choice-num">3</span>あまり参考にならなかった</label>
+        <label class="choice-label"><input type="radio" name="q2" value="4"><span class="choice-num">4</span>参考にならなかった</label>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="prevQ(2)">← 戻る</button>
+        <button class="btn btn-next" onclick="nextQ(2)">次へ →</button>
+      </div>
+    </div>
 
-<!-- Q4 -->
-<div class="q-card" id="q4-card">
-  <div class="q-num">質問 04</div>
-  <div class="q-text">④セミナーで、特に印象に残った内容や、参考になったことについてご記入ください。</div>
-  <div class="optional">※ 任意回答</div>
-  <textarea id="q4-text" placeholder="自由にご記入ください"></textarea>
-  <div class="nav">
-    <button class="btn-back" onclick="goTo(3)">← 戻る</button>
-    <button class="btn-next" onclick="goTo(5)">次へ →</button>
-  </div>
-</div>
+    <!-- Q3 -->
+    <div class="question" id="q3">
+      <div class="q-num">質問 03</div>
+      <div class="q-text">③講座の時間はいかがでしたか。</div>
+      <div class="choices">
+        <label class="choice-label"><input type="radio" name="q3" value="1"><span class="choice-num">1</span>ちょうど良い</label>
+        <label class="choice-label"><input type="radio" name="q3" value="2"><span class="choice-num">2</span>長い</label>
+        <label class="choice-label"><input type="radio" name="q3" value="3"><span class="choice-num">3</span>短い</label>
+        <label class="choice-label"><input type="radio" name="q3" value="4"><span class="choice-num">4</span>もう少し長くてもよい</label>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="prevQ(3)">← 戻る</button>
+        <button class="btn btn-next" onclick="nextQ(3)">次へ →</button>
+      </div>
+    </div>
 
-<!-- Q5 -->
-<div class="q-card" id="q5-card">
-  <div class="q-num">質問 05</div>
-  <div class="q-text">⑤お伝えしたいことなどありましたらご自由に記入してください。</div>
-  <div class="optional">※ 任意回答</div>
-  <textarea id="q5-text" placeholder="自由にご記入ください"></textarea>
-  <div class="nav">
-    <button class="btn-back" onclick="goTo(4)">← 戻る</button>
-    <button class="btn-next" onclick="goTo(6)">次へ →</button>
-  </div>
-</div>
+    <!-- Q4 -->
+    <div class="question" id="q4">
+      <div class="q-num">質問 04</div>
+      <div class="q-text">④セミナーで、特に印象に残った内容や、参考になったことについてご記入ください。</div>
+      <div class="q-note">※ 任意回答</div>
+      <textarea id="q4-text" placeholder="自由にご記入ください（任意）" rows="4"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="prevQ(4)">← 戻る</button>
+        <button class="btn btn-next" onclick="nextQ(4)">次へ →</button>
+      </div>
+    </div>
 
-<!-- Q6 -->
-<div class="q-card" id="q6-card">
-  <div class="q-num">質問 06</div>
-  <div class="q-text">⑥会津地域若者サポートステーション（サポステ）の名前を聞いたことはありますか。</div>
-  <div class="choices" id="q6-choices">
-    <label class="choice-label" onclick="select(this,'q6')"><input type="radio" name="q6"><div class="radio-dot"></div>１．聞いたことがある</label>
-    <label class="choice-label" onclick="select(this,'q6')"><input type="radio" name="q6"><div class="radio-dot"></div>２．聞いたことがない</label>
-    <label class="choice-label" onclick="select(this,'q6')"><input type="radio" name="q6"><div class="radio-dot"></div>３．わからない</label>
-  </div>
-  <div class="nav">
-    <button class="btn-back" onclick="goTo(5)">← 戻る</button>
-    <button class="btn-submit" id="q6-submit" onclick="doSubmit()" disabled>送信する</button>
-  </div>
-</div>
+    <!-- Q5 -->
+    <div class="question" id="q5">
+      <div class="q-num">質問 05</div>
+      <div class="q-text">⑤お伝えしたいことなどありましたらご自由に記入してください。</div>
+      <div class="q-note">※ 任意回答</div>
+      <textarea id="q5-text" placeholder="自由にご記入ください（任意）" rows="4"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="prevQ(5)">← 戻る</button>
+        <button class="btn btn-next" onclick="nextQ(5)">次へ →</button>
+      </div>
+    </div>
 
-<!-- Thank you screen -->
-<div id="screen-thanks">
-  <div class="thanks-card">
-    <div class="thanks-icon">✓</div>
-    <h2>ご回答ありがとうございました</h2>
-    <p>貴重なご意見をいただき、誠にありがとうございます。<br>今後のセミナー改善に役立てます。<br><br>本日はご参加ありがとうございました。</p>
-    <button class="btn-restart" onclick="location.reload()">新しい回答を入力</button>
-  </div>
-</div>
+    <!-- Q6 -->
+    <div class="question" id="q6">
+      <div class="q-num">質問 06</div>
+      <div class="q-text">⑥会津地域若者サポートステーション（サポステ）の名前を聞いたことはありますか。</div>
+      <div class="choices">
+        <label class="choice-label"><input type="radio" name="q6" value="1"><span class="choice-num">1</span>聞いたことがある</label>
+        <label class="choice-label"><input type="radio" name="q6" value="2"><span class="choice-num">2</span>聞いたことがない</label>
+        <label class="choice-label"><input type="radio" name="q6" value="3"><span class="choice-num">3</span>わからない</label>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back" onclick="prevQ(6)">← 戻る</button>
+        <button class="btn btn-submit" id="submit-btn" onclick="submitSurvey()">送信する</button>
+      </div>
+    </div>
 
-<!-- 管理パネル -->
-<div id="adminPanel">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-    <h3>📊 集計結果</h3>
-    <button onclick="closeAdmin()" style="border:none;background:none;color:#2d7cc1;cursor:pointer;font-size:14px;">閉じる</button>
+    <!-- 完了画面 -->
+    <div id="done-screen">
+      <div class="done-icon">✓</div>
+      <h2>ご回答ありがとうございました</h2>
+      <p>
+        貴重なご意見をいただき、誠にありがとうございます。<br>
+        今後のセミナー改善に役立てます。<br>
+        本日はご参加ありがとうございました。
+      </p>
+      <button class="btn-new" onclick="resetSurvey()">新しい回答を入力</button>
+    </div>
   </div>
-  <div class="admin-grid" id="statsGrid"></div>
-  <div style="text-align:center;margin-bottom:15px;">
-    <button onclick="downloadCSV()" style="padding:8px 16px;background:#28a745;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">CSV出力</button>
-    <button onclick="clearData()" style="padding:8px 16px;background:#dc3545;color:white;border:none;border-radius:6px;cursor:pointer;margin-left:10px;">リセット</button>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>日時</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Q5</th><th>Q6</th></tr></thead>
-      <tbody id="adminBody"></tbody>
-    </table>
+
+  <div class="admin-bar">
+    <a href="#" onclick="openAdmin(); return false;">🔐 管理者</a>
+    &nbsp;
+    <a href="#" onclick="openQR(); return false;">📱 QRコード表示</a>
   </div>
 </div>
 
-<!-- QRパネル -->
-<div id="qrPanel">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+<!-- ===== 管理者モーダル ===== -->
+<div id="admin-modal">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeAdmin()">✕</button>
+    <h2>📊 集計結果</h2>
+
+    <!-- パスワード画面 -->
+    <div id="pw-screen">
+      <p style="font-size:14px;margin-bottom:12px;">管理者パスワードを入力してください</p>
+      <div class="pw-wrap">
+        <input type="password" id="pw-input" placeholder="パスワード" onkeydown="if(event.key==='Enter')checkPw()">
+        <button class="btn-sm btn-load" onclick="checkPw()">ログイン</button>
+      </div>
+      <div class="error-msg" id="pw-error"></div>
+    </div>
+
+    <!-- 集計画面 -->
+    <div id="admin-content" style="display:none">
+      <div class="admin-actions">
+        <button class="btn-sm btn-load" onclick="loadData()">🔄 データ読み込み</button>
+        <button class="btn-sm btn-csv"  onclick="exportCSV()">📥 CSV出力</button>
+      </div>
+      <div class="status-msg" id="status-msg">「データ読み込み」を押してください</div>
+      <div class="table-wrap">
+        <table id="result-table">
+          <thead>
+            <tr>
+              <th>日時</th>
+              <th>Q1 感想</th>
+              <th>Q2 自己PR</th>
+              <th>Q3 時間</th>
+              <th>Q4 印象に残った内容</th>
+              <th>Q5 その他</th>
+              <th>Q6 サポステ認知</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px;">データがありません</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== QRモーダル ===== -->
+<div id="qr-modal">
+  <div class="qr-card">
     <h3>📱 配布用QRコード</h3>
-    <button onclick="document.getElementById('qrPanel').style.display='none'" style="border:none;background:none;color:#2d7cc1;cursor:pointer;font-size:14px;">閉じる</button>
+    <p>参加者にこのQRコードを読み取ってもらってください</p>
+    <div id="qr-code"></div>
+    <div class="qr-url" id="qr-url-text"></div>
+    <br>
+    <button class="btn-qr-close" onclick="closeQR()">閉じる</button>
   </div>
-  <div class="qr-box" id="qr-canvas"></div>
-  <p style="font-size:10px;color:#888;text-align:center;margin-top:10px;word-break:break-all;" id="qr-url-text"></p>
 </div>
 
-<!-- 管理者リンク -->
-<div style="text-align:center;margin-top:40px;display:flex;justify-content:center;gap:20px;">
-  <a href="javascript:void(0)" onclick="openQR()" style="font-size:12px;color:#aaa;text-decoration:none;">📱 QR表示</a>
-  <a href="javascript:void(0)" onclick="openAdmin()" style="font-size:12px;color:#aaa;text-decoration:none;">🔐 管理者</a>
-</div>
-
-</div><!-- end wrap -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const ans = {q1:'',q2:'',q3:'',q4:'',q5:'',q6:''};
-let cur = 1;
+// ================================================
+// ★★★ ここを設定してください ★★★
+// ================================================
+const GAS_URL = 'ここにGoogle Apps ScriptのURLを貼り付けてください';
+// 例: 'https://script.google.com/macros/s/AKfycbxxxxxx/exec'
 
-// 選択処理
-function select(label, q){
-  document.querySelectorAll('#'+q+'-choices .choice-label').forEach(l => l.className = 'choice-label');
-  label.className = 'choice-label selected';
-  ans[q] = label.textContent.trim();
-  const nb = document.getElementById(q+'-next') || document.getElementById(q+'-submit');
-  if(nb) nb.disabled = false;
+const ADMIN_PASSWORD = '1234'; // 管理者パスワード（好きな値に変更OK）
+// ================================================
+
+let currentQ = 1;
+const totalQ = 6;
+
+// 選択肢クリック
+document.querySelectorAll('.choice-label').forEach(label => {
+  label.addEventListener('click', () => {
+    const name = label.querySelector('input').name;
+    document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+      r.closest('.choice-label').classList.remove('selected');
+    });
+    label.classList.add('selected');
+    label.querySelector('input').checked = true;
+  });
+});
+
+// 進捗更新
+function updateProgress(q) {
+  const pct = Math.round((q / totalQ) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('q-label').textContent = `質問 ${q} / ${totalQ}`;
+  document.getElementById('q-pct').textContent = pct + '%';
 }
 
-// 画面遷移
-function goTo(n){
-  document.getElementById('q'+cur+'-card').classList.remove('active');
-  cur = n;
-  document.getElementById('q'+n+'-card').classList.add('active');
-  const pct = Math.round((n/6)*100);
-  document.getElementById('prog-fill').style.width = pct+'%';
-  document.getElementById('prog-text').textContent = '質問 '+n+' / 6';
-  document.getElementById('prog-pct').textContent = pct+'%';
-  window.scrollTo({top:0, behavior:'smooth'});
+// 次へ
+function nextQ(q) {
+  if (q <= 3 || q === 6) {
+    const val = document.querySelector(`input[name="q${q}"]:checked`);
+    if (!val) { alert('選択してください'); return; }
+  }
+  document.getElementById(`q${q}`).classList.remove('active');
+  currentQ = q + 1;
+  document.getElementById(`q${currentQ}`).classList.add('active');
+  updateProgress(currentQ);
+  window.scrollTo(0, 0);
 }
 
-// 送信処理
-function doSubmit(){
-  ans.q4 = document.getElementById('q4-text').value;
-  ans.q5 = document.getElementById('q5-text').value;
-
-  // localStorage に保存
-  const data = JSON.parse(localStorage.getItem('survey_results') || '[]');
-  data.push({ time: new Date().toLocaleString(), ...ans });
-  localStorage.setItem('survey_results', JSON.stringify(data));
-
-  // 画面切替
-  document.getElementById('screen-form').style.display = 'none';
-  document.getElementById('progress-wrap').style.display = 'none';
-  document.getElementById('q6-card').classList.remove('active');
-  document.getElementById('screen-thanks').style.display = 'block';
-  window.scrollTo({top:0, behavior:'smooth'});
+// 戻る
+function prevQ(q) {
+  document.getElementById(`q${q}`).classList.remove('active');
+  currentQ = q - 1;
+  document.getElementById(`q${currentQ}`).classList.add('active');
+  updateProgress(currentQ);
+  window.scrollTo(0, 0);
 }
 
-// 管理画面を開く
-function openAdmin(){
-  const pw = prompt("パスワードを入力してください (初期: admin123)");
-  if(pw === "admin0011"){
-    document.getElementById('adminPanel').style.display = 'block';
-    document.getElementById('qrPanel').style.display = 'none';
-    renderAdmin();
-    window.scrollTo(0, document.body.scrollHeight);
+// 送信
+async function submitSurvey() {
+  const q6val = document.querySelector('input[name="q6"]:checked');
+  if (!q6val) { alert('Q6を選択してください'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
+  const data = {
+    q1: document.querySelector('input[name="q1"]:checked')?.value || '',
+    q2: document.querySelector('input[name="q2"]:checked')?.value || '',
+    q3: document.querySelector('input[name="q3"]:checked')?.value || '',
+    q4: document.getElementById('q4-text').value,
+    q5: document.getElementById('q5-text').value,
+    q6: q6val.value
+  };
+
+  try {
+    if (GAS_URL.includes('ここに')) {
+      // GAS未設定の場合はローカルにも保存（デモ用）
+      const stored = JSON.parse(localStorage.getItem('survey_demo') || '[]');
+      stored.push({ datetime: new Date().toLocaleString('ja-JP'), ...data });
+      localStorage.setItem('survey_demo', JSON.stringify(stored));
+      alert('⚠️ GAS URLが未設定のため、このデバイスにのみ保存されました。\n管理者に設定をご確認ください。');
+    } else {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    }
+    showDone();
+  } catch(e) {
+    alert('送信に失敗しました。ネットワークをご確認ください。');
+    btn.disabled = false;
+    btn.textContent = '送信する';
   }
 }
 
-function closeAdmin(){
-  document.getElementById('adminPanel').style.display = 'none';
+function showDone() {
+  document.getElementById(`q${currentQ}`).style.display = 'none';
+  document.querySelector('.progress-wrap').style.display = 'none';
+  document.querySelector('.intro').style.display = 'none';
+  document.getElementById('done-screen').style.display = 'block';
 }
 
-// 集計表示
-function renderAdmin(){
-  const data = JSON.parse(localStorage.getItem('survey_results') || '[]');
-  const count = data.length;
-
-  const getVal = (str) => {
-    if(!str) return 0;
-    const m = str.match(/[1234１２３４]/);
-    return m ? Number(m[0].replace(/[１-４]/, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))) : 0;
-  };
-
-  const avg = (key) => {
-    if(count === 0) return '-';
-    const vals = data.map(d => getVal(d[key])).filter(v => v > 0);
-    if(vals.length === 0) return '-';
-    return (vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(1);
-  };
-
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-box"><div class="stat-val">${count}</div><div class="stat-lbl">回答数</div></div>
-    <div class="stat-box"><div class="stat-val">${avg('q1')}</div><div class="stat-lbl">Q1 満足度平均</div></div>
-    <div class="stat-box"><div class="stat-val">${avg('q2')}</div><div class="stat-lbl">Q2 理解度平均</div></div>
-    <div class="stat-box"><div class="stat-val">${avg('q3')}</div><div class="stat-lbl">Q3 時間評価平均</div></div>
-  `;
-
-  document.getElementById('adminBody').innerHTML = data.map(d => `
-    <tr>
-      <td style="font-size:9px">${d.time}</td>
-      <td>${getVal(d.q1)||''}</td>
-      <td>${getVal(d.q2)||''}</td>
-      <td>${getVal(d.q3)||''}</td>
-      <td style="text-align:left;max-width:120px;word-break:break-all">${d.q4||''}</td>
-      <td style="text-align:left;max-width:120px;word-break:break-all">${d.q5||''}</td>
-      <td style="font-size:9px">${d.q6||''}</td>
-    </tr>
-  `).join('');
+function resetSurvey() {
+  location.reload();
 }
 
-// CSVダウンロード
-function downloadCSV(){
-  const data = JSON.parse(localStorage.getItem('survey_results') || '[]');
-  if(data.length === 0) return alert("データがありません");
-  const headers = ["日時","Q1内容","Q1点","Q2内容","Q2点","Q3内容","Q3点","Q4","Q5","Q6"];
-  const getVal = (str) => {
-    if(!str) return '';
-    const m = str.match(/[1234１２３４]/);
-    return m ? Number(m[0].replace(/[１-４]/, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))) : '';
-  };
-  const rows = data.map(d => [
-    d.time, d.q1, getVal(d.q1),
-    d.q2, getVal(d.q2),
-    d.q3, getVal(d.q3),
-    d.q4, d.q5, d.q6
-  ]);
-  const csv = "\uFEFF" + [headers, ...rows].map(r => r.map(v => `"${(v||'').toString().replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+// ===== 管理者 =====
+function openAdmin() {
+  document.getElementById('admin-modal').style.display = 'block';
+  document.getElementById('pw-input').focus();
+}
+function closeAdmin() {
+  document.getElementById('admin-modal').style.display = 'none';
+}
+
+function checkPw() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === ADMIN_PASSWORD) {
+    document.getElementById('pw-screen').style.display = 'none';
+    document.getElementById('admin-content').style.display = 'block';
+    loadData();
+  } else {
+    document.getElementById('pw-error').textContent = 'パスワードが違います';
+  }
+}
+
+async function loadData() {
+  const msg = document.getElementById('status-msg');
+  msg.textContent = '読み込み中...';
+  const tbody = document.getElementById('table-body');
+
+  try {
+    if (GAS_URL.includes('ここに')) {
+      // デモ：localStorageから読む
+      const stored = JSON.parse(localStorage.getItem('survey_demo') || '[]');
+      renderTable(stored.map(r => [r.datetime, r.q1, r.q2, r.q3, r.q4, r.q5, r.q6]));
+      msg.textContent = `${stored.length}件（このデバイスのみ・デモ表示）`;
+    } else {
+      const res = await fetch(GAS_URL + '?action=get');
+      const rows = await res.json();
+      const data = rows.slice(1); // ヘッダー除く
+      renderTable(data);
+      msg.textContent = `${data.length}件のデータを読み込みました`;
+    }
+  } catch(e) {
+    msg.textContent = '読み込み失敗: ' + e.message;
+  }
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('table-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px;">データがありません</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r =>
+    `<tr>${r.map(c => `<td>${c || ''}</td>`).join('')}</tr>`
+  ).join('');
+}
+
+function exportCSV() {
+  const rows = [['日時','Q1 感想','Q2 自己PR','Q3 時間','Q4 印象に残った内容','Q5 その他','Q6 サポステ認知']];
+  document.querySelectorAll('#table-body tr').forEach(tr => {
+    rows.push([...tr.querySelectorAll('td')].map(td => '"' + (td.textContent||'').replace(/"/g,'""') + '"'));
+  });
+  const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `集計_${new Date().toLocaleDateString()}.csv`;
+  a.download = `アンケート集計_${new Date().toLocaleDateString('ja-JP')}.csv`;
   a.click();
 }
 
-// リセット
-function clearData(){
-  if(confirm("全てのデータを削除しますか？")){
-    localStorage.removeItem('survey_results');
-    renderAdmin();
+// ===== QRコード =====
+let qrGenerated = false;
+function openQR() {
+  const url = location.href.split('?')[0];
+  document.getElementById('qr-url-text').textContent = url;
+  if (!qrGenerated) {
+    new QRCode(document.getElementById('qr-code'), {
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: '#1a5276',
+      colorLight: '#ffffff',
+    });
+    qrGenerated = true;
   }
+  document.getElementById('qr-modal').classList.add('show');
 }
-
-// QRコード表示（現在のURLを自動取得）
-function openQR(){
-  const url = window.location.href;
-  document.getElementById('qr-canvas').innerHTML = "";
-  new QRCode(document.getElementById('qr-canvas'), {
-    text: url,
-    width: 200,
-    height: 200,
-    colorDark: "#1a3a5c",
-    colorLight: "#ffffff"
-  });
-  document.getElementById('qr-url-text').innerText = url;
-  document.getElementById('qrPanel').style.display = 'block';
-  document.getElementById('adminPanel').style.display = 'none';
-  window.scrollTo(0, document.body.scrollHeight);
+function closeQR() {
+  document.getElementById('qr-modal').classList.remove('show');
 }
 </script>
 </body>
