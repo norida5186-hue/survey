@@ -503,6 +503,7 @@
       <div class="admin-actions">
         <button class="btn-sm btn-load" onclick="loadData()">🔄 データ読み込み</button>
         <button class="btn-sm btn-csv"  onclick="exportCSV()">📥 CSV出力</button>
+        <button class="btn-sm" style="background:#c0392b;color:white;" onclick="resetData()">🗑️ リセット</button>
       </div>
       <div class="status-msg" id="status-msg">「データ読み込み」を押してください</div>
       <div class="table-wrap">
@@ -543,7 +544,7 @@
 // ================================================
 // ★★★ ここを設定してください ★★★
 // ================================================
-const GAS_URL = 'ここにGoogle Apps ScriptのURLを貼り付けてください';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzBFYhBnChQ8ZdFN-1vf9x7H1TI41jZHb3rD5No3iR3vZsBweP9W0nPIjiOa6iaeyW3yw/exec';
 // 例: 'https://script.google.com/macros/s/AKfycbxxxxxx/exec'
 
 const ADMIN_PASSWORD = '1234'; // 管理者パスワード（好きな値に変更OK）
@@ -698,6 +699,18 @@ function renderTable(rows) {
   tbody.innerHTML = rows.map(r =>
     `<tr>${r.map(c => `<td>${c || ''}</td>`).join('')}</tr>`
   ).join('');
+}
+
+function resetData() {
+  if (!confirm("本当にリセットしますか？\nスプレッドシートのデータが全て消えます。")) return;
+  const msg = document.getElementById("status-msg");
+  msg.textContent = "リセット中...";
+  fetch(GAS_URL + "?action=reset")
+    .then(() => {
+      document.getElementById("table-body").innerHTML = `<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px;">データがありません</td></tr>`;
+      msg.textContent = "リセットしました";
+    })
+    .catch(() => { msg.textContent = "リセット失敗"; });
 }
 
 function exportCSV() {
